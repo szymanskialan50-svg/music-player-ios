@@ -26,7 +26,7 @@ jobs:
       - name: Locate project directory
         id: locate
         run: |
-          pkg=$(find . -maxdepth 4 -name package.json -not -path "*/node_modules/*" | head -n 1)
+          pkg=$(find . -maxdepth 4 -name package.json -not -path "*/node_modules/*" -not -path "*/capacitor-youtube-player/*" | awk '{ print length, $0 }' | sort -n | cut -d" " -f2- | head -n 1)
           if [ -z "$pkg" ]; then
             echo "::error::Nie znaleziono package.json w repozytorium."
             exit 1
@@ -133,7 +133,7 @@ jobs:
       - name: Locate project directory
         id: locate
         run: |
-          pkg=$(find . -maxdepth 4 -name package.json -not -path "*/node_modules/*" | head -n 1)
+          pkg=$(find . -maxdepth 4 -name package.json -not -path "*/node_modules/*" -not -path "*/capacitor-youtube-player/*" | awk '{ print length, $0 }' | sort -n | cut -d" " -f2- | head -n 1)
           if [ -z "$pkg" ]; then
             echo "::error::Nie znaleziono package.json w repozytorium."
             exit 1
