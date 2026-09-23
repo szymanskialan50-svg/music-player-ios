@@ -145,7 +145,7 @@ h1,h2,h3,p { margin:0; }
 .np-handle { width:36px; height:5px; border-radius:3px; background:rgba(255,255,255,0.22); margin-bottom:6px; }
 .np-close { position:absolute; top:calc(var(--safe-top) + 14px); left:20px; width:34px; height:34px; border-radius:50%; background:var(--surface); }
 .np-visual-wrap { flex:1; width:100%; display:flex; align-items:center; justify-content:center; max-height:46vh; }
-.visualizer { width:min(72vw,300px); height:min(72vw,300px); }
+.visualizer { width:min(72vw,300px); height:min(72vw,300px); border-radius:50% !important; animation: spin-record 8s linear infinite; animation-play-state: paused; box-shadow: 0 0 0 8px #111, 0 0 0 10px #222; } @keyframes spin-record { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .visualizer.playing { animation-play-state: running; }
 .np-info { text-align:center; margin:10px 0 26px; padding:0 10px; max-width:100%; }
 .np-title { font-size:21px; font-weight:700; letter-spacing:-0.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .np-progress { width:100%; max-width:420px; margin-bottom:22px; }
@@ -804,7 +804,7 @@ function drawVis(){
 }
 
 /* ===== UI ===== */
-function updPlayUI(){
+function updPlayUI(){let tn=document.getElementById('npThumb');if(tn){if(state.isPlaying)tn.classList.add('playing');else tn.classList.remove('playing');}
   const pl=state.isPlaying;
   miniPlayPauseBtn.innerHTML=pl?pauseIcon():playIcon();
   npPlayPauseBtn.innerHTML=pl?pauseIcon(true):playIcon(true);
@@ -1520,6 +1520,8 @@ setTimeout(() => { if (typeof applyLanguage === 'function') applyLanguage(lang);
 </script>
 </body>
 </html>
+
+
 
 
 

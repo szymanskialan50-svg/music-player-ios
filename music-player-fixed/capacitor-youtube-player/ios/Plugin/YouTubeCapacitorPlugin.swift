@@ -15,20 +15,48 @@ public class YouTubeCapacitorPlugin: CAPPlugin {
         super.load()
         DispatchQueue.main.async {
             do {
-                try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
+                try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
                 try AVAudioSession.sharedInstance().setActive(true)
             } catch {
                 print("Failed to set audio session category.")
             }
             
+            self.silentPlayer.play() // Start silent audio to keep app alive in background
+            
+            // Inject script into the main Capacitor WebView to override Page Visibility
+            // This applies to the main frame and all subframes (including the YouTube iframe).
+            if let webView = self.bridge?.webView {
+                let source = """
+                Object.defineProperty(document, 'visibilityState', {
+                    get: function() { return 'visible'; }
+                });
+                Object.defineProperty(document, 'hidden', {
+                    get: function() { return false; }
+                });
+                document.addEventListener('visibilitychange', function(e) {
+                    e.stopImmediatePropagation();
+                }, true);
+                """
+                let script = WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: false)
+                webView.configuration.userContentController.addUserScript(script)
+            }
+            
             self.player = YouTubePlayer()
             
-            // Add the player's web view as a hidden subview to the Capacitor web view
-            // so it can play audio in the background without taking up screen space.
+            // Add the plugin's secondary web view as a hidden subview
             if let webView = self.player?.webView {
                 webView.isHidden = true
                 self.bridge?.webView?.superview?.addSubview(webView)
             }
+            
+            NotificationCenter.default.addObserver(self, selector: #selector(self.appDidEnterBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
+        }
+    }
+    
+    @objc func appDidEnterBackground() {
+        // Force WebKit/YouTube to resume playback if it was paused by backgrounding
+        DispatchQueue.main.async {
+            self.bridge?.webView?.evaluateJavaScript("if (typeof ytPlayer !== 'undefined' && ytPlayer && typeof ytPlayer.playVideo === 'function') { ytPlayer.playVideo(); }", completionHandler: nil)
         }
     }
     
