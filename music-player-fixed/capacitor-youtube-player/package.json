@@ -1,0 +1,29 @@
+{
+  "name": "capacitor-youtube-player",
+  "version": "1.0.0",
+  "description": "Native YouTube Player for iOS",
+  "main": "dist/plugin.cjs.js",
+  "module": "dist/plugin.js",
+  "types": "dist/docs.d.ts",
+  "unpkg": "dist/plugin.js",
+  "files": [
+    "dist/",
+    "ios/Plugin/",
+    "capacitor-youtube-player.podspec"
+  ],
+  "author": "Antigravity",
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/core": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/ios": "^6.0.0",
+    "typescript": "~4.1.5"
+  },
+  "capacitor": {
+    "ios": {
+      "src": "ios",
+      "pluginClass": "YouTubeCapacitorPlugin"
+    }
+  }
+}

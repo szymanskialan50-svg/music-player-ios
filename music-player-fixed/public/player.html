@@ -1069,6 +1069,36 @@ try { localStorage.removeItem('mp_api_base'); localStorage.removeItem('mp_yt_api
 
 /* ===== Hidden YouTube audio engine ===== */
 let ytPlayer = null, ytApiLoading = false, ytPendingId = null, ytTick = null, ytActive = false;
+let isNativeYT = false;
+
+function initNativeYT() {
+  if (window.Capacitor && window.Capacitor.getPlatform() === 'ios' && window.Capacitor.Plugins.YouTubeCapacitorPlugin) {
+    isNativeYT = true;
+    const NativeYT = window.Capacitor.Plugins.YouTubeCapacitorPlugin;
+    NativeYT.addListener('youtubeStateChange', (data) => {
+      if (!ytActive) return;
+      if (data.state === 'playing') { state.isPlaying = true; updPlayUI(); if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; }
+      else if (data.state === 'paused') { state.isPlaying = false; updPlayUI(); if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; }
+      else if (data.state === 'ended') { onEnded(); }
+    });
+    NativeYT.addListener('youtubeTimeUpdate', (data) => {
+      if (!ytActive || seeking) return;
+      const c = data.currentTime || 0;
+      let d = data.duration || 0;
+      const cur = getCur();
+      if (!d && cur && cur.duration) d = cur.duration;
+      if (cur && d && (!cur.duration || Math.abs(cur.duration - d) > 2)) { cur.duration = Math.round(d); saveTrackToDB(cur); updDurUI(cur.id); }
+      const p = d ? (c / d) * 100 : 0;
+      npSeekEl.value = p; npSeekEl.style.setProperty('--fill', p + '%');
+      npCurrentEl.textContent = fmt(c); npDurationEl.textContent = fmt(d);
+      miniProgressEl.style.width = p + '%';
+      if ('mediaSession' in navigator && navigator.mediaSession.setPositionState && d > 0) {
+        try { navigator.mediaSession.setPositionState({ duration: d, playbackRate: 1, position: Math.min(c, d) }); } catch (e) {}
+      }
+    });
+  }
+}
+setTimeout(initNativeYT, 100);
 
 function ensureYTApi(){
   if (window.YT && window.YT.Player) { createYTPlayer(); return; }
@@ -1101,12 +1131,21 @@ function createYTPlayer(){
 
 function ytLoad(videoId){
   ytActive = true;
+  if (isNativeYT) {
+    window.Capacitor.Plugins.YouTubeCapacitorPlugin.load({ videoId: videoId });
+    window.Capacitor.Plugins.YouTubeCapacitorPlugin.play();
+    return;
+  }
   if (!ytPlayer || !ytPlayer.loadVideoById) { ytPendingId = videoId; ensureYTApi(); return; }
   try { ytPlayer.loadVideoById(videoId); ytPlayer.playVideo(); } catch (e) { ytPendingId = videoId; }
   startYtTick();
 }
 function ytStop(){
   ytActive = false; stopYtTick();
+  if (isNativeYT) {
+    window.Capacitor.Plugins.YouTubeCapacitorPlugin.stop();
+    return;
+  }
   try { if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo(); } catch (e) {}
 }
 function startYtTick(){ if (ytTick) return; ytTick = setInterval(ytOnTime, 500); ytOnTime(); }
@@ -1156,6 +1195,12 @@ const _origTogglePP = togglePP;
 togglePP = function(){
   const cur = getCur();
   if (isYt(cur)) {
+    if (isNativeYT) {
+      if (state.isPlaying) { window.Capacitor.Plugins.YouTubeCapacitorPlugin.pause(); state.isPlaying = false; }
+      else { window.Capacitor.Plugins.YouTubeCapacitorPlugin.play(); state.isPlaying = true; }
+      updPlayUI();
+      return;
+    }
     if (!ytPlayer || !ytPlayer.getPlayerState) { ytLoad(cur.videoId); state.isPlaying = true; updPlayUI(); return; }
     try {
       const st = ytPlayer.getPlayerState();
@@ -1200,7 +1245,11 @@ npSeekEl.addEventListener('change', () => {
   const cur = getCur();
   if (!isYt(cur)) return;
   let d = cur.duration || 0;
-  try { d = (ytPlayer && ytPlayer.getDuration && ytPlayer.getDuration()) || d; ytPlayer.seekTo((npSeekEl.value / 100) * d, true); } catch (e) {}
+  if (isNativeYT) {
+    window.Capacitor.Plugins.YouTubeCapacitorPlugin.seekTo({ seconds: (npSeekEl.value / 100) * d });
+  } else {
+    try { d = (ytPlayer && ytPlayer.getDuration && ytPlayer.getDuration()) || d; ytPlayer.seekTo((npSeekEl.value / 100) * d, true); } catch (e) {}
+  }
   seeking = false;
 });
 
