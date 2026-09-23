@@ -37,7 +37,7 @@ import WebKit
 /// ```
 public struct YouTubePlayerView<Overlay: View>: View {
     
-    var player: YouTubePlayer
+    @ObservedObject var player: YouTubePlayer
     var overlay: (YouTubePlayerPhase) -> Overlay
     
     public var body: some View {

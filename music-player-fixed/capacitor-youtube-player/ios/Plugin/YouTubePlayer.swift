@@ -1,6 +1,6 @@
 import WebKit
 import UIKit
-import Observation
+import Combine
 
 // MARK: - YouTubePlayer
 
@@ -23,28 +23,27 @@ import Observation
 ///     .onChange(of: player.playerState) { _, state in print(state) }
 /// }
 /// ```
-@Observable
-public final class YouTubePlayer: NSObject {
+public final class YouTubePlayer: NSObject, ObservableObject {
     
     // MARK: - Observable State
     
     /// The current playback state of the player.
-    public private(set) var playerState: YouTubePlayerState = .unknown
+    @Published public private(set) var playerState: YouTubePlayerState = .unknown
     
     /// The current playback quality of the player.
-    public private(set) var playbackQuality: YouTubePlaybackQuality = .unknown
+    @Published public private(set) var playbackQuality: YouTubePlaybackQuality = .unknown
     
     /// Whether the player is ready to accept API calls.
-    public private(set) var isReady = false
+    @Published public private(set) var isReady = false
     
     /// The underlying WKWebView. Becomes non-nil after the first `load` call.
-    public private(set) var webView: WKWebView?
+    @Published public private(set) var webView: WKWebView?
     
     /// The last error reported by the player, if any. Reset on each new `load` call.
-    public private(set) var lastError: YouTubePlayerError?
+    @Published public private(set) var lastError: YouTubePlayerError?
     
     /// The current playback time in seconds, updated approximately twice per second.
-    public private(set) var playTime: Float = 0
+    @Published public private(set) var playTime: Float = 0
     
     /// The current phase of the player lifecycle.
     public var phase: YouTubePlayerPhase {
@@ -345,8 +344,9 @@ public final class YouTubePlayer: NSObject {
     }
     
     private func loadHTMLTemplate() -> String? {
+        let bundle = Bundle(for: YouTubePlayer.self)
         guard
-            let path = Bundle.module.path(forResource: "YTPlayerView-iframe-player", ofType: "html"),
+            let path = bundle.path(forResource: "YTPlayerView-iframe-player", ofType: "html"),
             let template = try? String(contentsOfFile: path, encoding: .utf8)
         else {
             return nil

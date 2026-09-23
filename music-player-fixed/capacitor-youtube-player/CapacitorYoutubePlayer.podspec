@@ -11,8 +11,8 @@ Pod::Spec.new do |s|
   s.author = package['author']
   s.source = { :git => 'https://github.com/szymanskialan50-svg/music-player-ios.git', :tag => s.version.to_s }
   s.source_files = 'ios/Plugin/**/*.{swift,h,m,c,cc,mm,cpp}'
-  s.ios.deployment_target  = '13.0'
-  s.dependency 'Capacitor'
-  s.swift_version = '5.1'
-  s.resources = ['ios/Plugin/**/*.html']
+  s.ios.deployment_target  = '15.0'
+  s.dependency 'Capacitor', '~> 8.0'
+  s.swift_version = '5.9'
+  s.resources = 'ios/Plugin/**/*.html'
 end
