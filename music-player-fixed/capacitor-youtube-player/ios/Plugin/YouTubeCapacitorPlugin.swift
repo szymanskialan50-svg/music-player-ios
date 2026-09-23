@@ -15,10 +15,11 @@ public class YouTubeCapacitorPlugin: CAPPlugin {
         super.load()
         DispatchQueue.main.async {
             do {
-                try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
-                try AVAudioSession.sharedInstance().setActive(true)
+                let session = AVAudioSession.sharedInstance()
+                try session.setCategory(.playback, mode: .default, options: [])
+                try session.setActive(true)
             } catch {
-                print("Failed to set audio session category.")
+                print("Failed to set audio session category: \(error)")
             }
             
             self.silentPlayer.play() // Start silent audio to keep app alive in background
