@@ -2,6 +2,8 @@ import Foundation
 import Capacitor
 import WebKit
 
+import AVFoundation
+
 @objc(YouTubeCapacitorPlugin)
 public class YouTubeCapacitorPlugin: CAPPlugin {
     
@@ -11,6 +13,13 @@ public class YouTubeCapacitorPlugin: CAPPlugin {
     public override func load() {
         super.load()
         DispatchQueue.main.async {
+            do {
+                try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
+                try AVAudioSession.sharedInstance().setActive(true)
+            } catch {
+                print("Failed to set audio session category.")
+            }
+            
             self.player = YouTubePlayer()
             
             // Add the player's web view as a hidden subview to the Capacitor web view

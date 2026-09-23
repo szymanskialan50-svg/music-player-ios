@@ -399,7 +399,10 @@ input[type=search]::-webkit-search-results-decoration { -webkit-appearance:none;
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M18 15l-6-6-6 6"/></svg>
   </button>
   <div class="np-visual-wrap"><canvas id="visualizer" class="visualizer"></canvas></div>
-  <div class="np-info"><h2 id="npTitle" class="np-title">&#8212;</h2></div>
+  <div class="np-info">
+    <h2 id="npTitle" class="np-title">&#8212;</h2>
+    <button id="npLyricsBtn" class="np-lyrics-btn" style="background: none; border: none; color: var(--accent); font-size: 13px; font-weight: 600; margin-top: 4px; padding: 4px 10px; cursor: pointer;">Lyrics</button>
+  </div>
   <div class="np-progress">
     <input type="range" id="npSeek" min="0" max="100" value="0" step="0.1">
     <div class="np-times"><span id="npCurrent">0:00</span><span id="npDuration">0:00</span></div>
@@ -446,6 +449,13 @@ input[type=search]::-webkit-search-results-decoration { -webkit-appearance:none;
   <h3 class="sheet-title" id="actionSheetTitle"></h3>
   <div id="actionSheetOptions" class="sheet-options"></div>
   <button id="actionSheetCancelBtn" class="secondary-btn full" data-i18n="btn_cancel">Cancel</button>
+</div>
+
+<div id="lyricsSheet" class="sheet hidden">
+  <div class="sheet-handle"></div>
+  <h3 class="sheet-title">Lyrics</h3>
+  <div id="lyricsContent" class="lyrics-content" style="white-space: pre-wrap; text-align: center; font-size: 15px; color: var(--text-secondary); max-height: 50vh; overflow-y: auto; padding: 10px; margin-bottom: 10px;"></div>
+  <button id="lyricsCloseBtn" class="secondary-btn full" data-i18n="btn_cancel">Close</button>
 </div>
 
 <!-- Language picker sheet (settings) -->
@@ -1053,7 +1063,7 @@ const YOUTUBE_API_KEY = 'AIzaSyD64Z4n8fyYGM-setU2CXwJT7eHkZ3WG2I';
 
 const SEARCH_I18N = {
   en:{tab_search:'Search Music',btn_search:'Search',searching:'Searching…',search_source:'YouTube database',search_placeholder:'Search a song, artist or album…',empty_search_title:'Search music on YouTube',empty_search_sub:'Type a song or artist name and press Search.',search_no_results:'No results found.',search_error_net:'No internet connection.',search_error_api:'Search failed. Please try again.',search_error_key:'YouTube search is not configured yet.',search_add_title:'Add to library?',search_add_yes:'Yes, add',search_add_no:'Cancel',toast_search_added:'Added to library',toast_search_dupe:'Already in your library',yt_play_error:'This track can’t be played.',search_badge:'YouTube'},
-  pl:{tab_search:'Szukaj muzyki',btn_search:'Szukaj',searching:'Szukam…',search_source:'Baza YouTube',search_placeholder:'Wyszukaj utwór, artystę lub album…',empty_search_title:'Szukaj muzyki w YouTube',empty_search_sub:'Wpisz nazwę utworu lub wykonawcy i naciśnij Szukaj.',search_no_results:'Brak wyników.',search_error_net:'Brak połączenia z internetem.',search_error_api:'Wyszukiwanie nie powiodło się. Spróbuj ponownie.',search_error_key:'Wyszukiwanie YouTube nie jest jeszcze skonfigurowane.',search_add_title:'Dodać do biblioteki?',search_add_yes:'Tak, dodaj',search_add_no:'Anuluj',toast_search_added:'Dodano do biblioteki',toast_search_dupe:'Już masz ten utwór',yt_play_error:'Nie można odtworzyć tego utworu.',search_badge:'YouTube'},
+  pl:{tab_search:'Szukaj',btn_search:'Szukaj',searching:'Szukam…',search_source:'Baza YouTube',search_placeholder:'Wyszukaj utwór, artystę lub album…',empty_search_title:'Szukaj muzyki w YouTube',empty_search_sub:'Wpisz nazwę utworu lub wykonawcy i naciśnij Szukaj.',search_no_results:'Brak wyników.',search_error_net:'Brak połączenia z internetem.',search_error_api:'Wyszukiwanie nie powiodło się. Spróbuj ponownie.',search_error_key:'Wyszukiwanie YouTube nie jest jeszcze skonfigurowane.',search_add_title:'Dodać do biblioteki?',search_add_yes:'Tak, dodaj',search_add_no:'Anuluj',toast_search_added:'Dodano do biblioteki',toast_search_dupe:'Już masz ten utwór',yt_play_error:'Nie można odtworzyć tego utworu.',search_badge:'YouTube'},
   fr:{tab_search:'Rechercher',btn_search:'Rechercher',searching:'Recherche…',search_source:'Base YouTube',search_placeholder:'Titre, artiste ou album…',empty_search_title:'Rechercher de la musique sur YouTube',empty_search_sub:'Saisissez un titre ou un artiste puis lancez la recherche.',search_no_results:'Aucun résultat.',search_error_net:'Pas de connexion Internet.',search_error_api:'La recherche a échoué. Réessayez.',search_error_key:"La recherche YouTube n'est pas encore configurée.",search_add_title:'Ajouter à la bibliothèque ?',search_add_yes:'Oui, ajouter',search_add_no:'Annuler',toast_search_added:'Ajouté à la bibliothèque',toast_search_dupe:'Déjà dans la bibliothèque',yt_play_error:'Impossible de lire ce titre.',search_badge:'YouTube'},
   es:{tab_search:'Buscar música',btn_search:'Buscar',searching:'Buscando…',search_source:'Base de YouTube',search_placeholder:'Canción, artista o álbum…',empty_search_title:'Busca música en YouTube',empty_search_sub:'Escribe una canción o artista y pulsa Buscar.',search_no_results:'Sin resultados.',search_error_net:'Sin conexión a Internet.',search_error_api:'La búsqueda falló. Inténtalo de nuevo.',search_error_key:'La búsqueda de YouTube aún no está configurada.',search_add_title:'¿Añadir a la biblioteca?',search_add_yes:'Sí, añadir',search_add_no:'Cancelar',toast_search_added:'Añadido a la biblioteca',toast_search_dupe:'Ya está en tu biblioteca',yt_play_error:'No se puede reproducir esta pista.',search_badge:'YouTube'},
   de:{tab_search:'Musik suchen',btn_search:'Suchen',searching:'Suche…',search_source:'YouTube-Datenbank',search_placeholder:'Titel, Interpret oder Album…',empty_search_title:'Musik auf YouTube suchen',empty_search_sub:'Gib einen Titel oder Interpreten ein und suche.',search_no_results:'Keine Ergebnisse.',search_error_net:'Keine Internetverbindung.',search_error_api:'Suche fehlgeschlagen. Bitte erneut versuchen.',search_error_key:'Die YouTube-Suche ist noch nicht eingerichtet.',search_add_title:'Zur Bibliothek hinzufügen?',search_add_yes:'Ja, hinzufügen',search_add_no:'Abbrechen',toast_search_added:'Zur Bibliothek hinzugefügt',toast_search_dupe:'Bereits in deiner Bibliothek',yt_play_error:'Dieser Titel kann nicht abgespielt werden.',search_badge:'YouTube'},
@@ -1510,6 +1520,61 @@ function addSearchTrack(item){
 
 ensureYTApi();
 setTimeout(() => { if (typeof applyLanguage === 'function') applyLanguage(lang); }, 0);
+
+/* ===== Lyrics Feature ===== */
+const npLyricsBtn = document.getElementById('npLyricsBtn');
+const lyricsCloseBtn = document.getElementById('lyricsCloseBtn');
+const lyricsContent = document.getElementById('lyricsContent');
+
+if (npLyricsBtn) {
+  npLyricsBtn.addEventListener('click', async () => {
+    const cur = getCur();
+    if (!cur) return;
+    
+    let artist = cur.channel || '';
+    let title = cur.name || '';
+    
+    if (!artist && title.includes('-')) {
+      const parts = title.split('-');
+      artist = parts[0].trim();
+      title = parts.slice(1).join('-').trim();
+    }
+    
+    // Remove (Official Video) or [Official Audio] from title to improve search
+    title = title.replace(/\(.*?\)/g, '').replace(/\[.*?\]/g, '').trim();
+    artist = artist.replace(/ - Topic/g, '').trim();
+    
+    lyricsContent.textContent = "Loading lyrics...";
+    openSheet('lyricsSheet');
+    
+    if (!artist || !title) {
+      lyricsContent.textContent = "Could not identify artist and title for lyrics search.";
+      return;
+    }
+    
+    try {
+      const res = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(title)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.lyrics) {
+          lyricsContent.textContent = data.lyrics;
+        } else {
+          lyricsContent.textContent = "Lyrics not found.";
+        }
+      } else {
+        lyricsContent.textContent = "Lyrics not found.";
+      }
+    } catch (e) {
+      lyricsContent.textContent = "Error fetching lyrics. Check your internet connection.";
+    }
+  });
+}
+
+if (lyricsCloseBtn) {
+  lyricsCloseBtn.addEventListener('click', () => {
+    closeSheet('lyricsSheet');
+  });
+}
 
 </script>
 </body>
