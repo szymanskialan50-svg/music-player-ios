@@ -1,0 +1,11 @@
+node_modules/
+.DS_Store
+dist/
+dist-ssr/
+coverage/
+*.local
+.npm/
+.yarn/
+ios/App/Pods/
+android/app/build/
+android/.gradle/
