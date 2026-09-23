@@ -12,6 +12,10 @@ const config: CapacitorConfig = {
   webDir: "www",
   server: {
     androidScheme: "https",
+    iosScheme: "https"
+  },
+  ios: {
+    allowsInlineMediaPlayback: true
   },
   plugins: {
     // Routes fetch()/XHR through native networking on-device instead of the
