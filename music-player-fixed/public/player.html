@@ -232,7 +232,7 @@ input[type=search]::-webkit-search-results-decoration { -webkit-appearance:none;
 .search-badge { font-size:10.5px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-tertiary); border:1px solid var(--border-soft); border-radius:6px; padding:2px 5px; }
 .search-spin { display:inline-block; width:15px; height:15px; border-radius:50%; border:2px solid currentColor; border-right-color:transparent; animation:spin 0.7s linear infinite; vertical-align:-2px; }
 @keyframes spin { to { transform:rotate(360deg); } }
-#ytHost { position:fixed; width:1px; height:1px; left:-9999px; top:-9999px; opacity:0.01; pointer-events:none; }
+#ytHost { position:fixed; width:300px; height:300px; left:-9999px; top:-9999px; opacity:0.01; pointer-events:none; }
 </style>
 </head>
 <body>
@@ -1120,14 +1120,25 @@ function ensureYTApi(){
 function createYTPlayer(){
   if (ytPlayer) return;
   ytPlayer = new YT.Player('ytFrame', {
-    height: '1', width: '1',
+    height: '300', width: '300',
     playerVars: { autoplay: 1, controls: 0, disablekb: 1, playsinline: 1, origin: location.origin },
     events: {
       onReady: () => { if (ytPendingId) { const id = ytPendingId; ytPendingId = null; ytLoad(id); } },
       onStateChange: (e) => {
         if (!ytActive) return;
-        if (e.data === YT.PlayerState.PLAYING) { state.isPlaying = true; updPlayUI(); startYtTick(); if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; }
-        else if (e.data === YT.PlayerState.PAUSED) { state.isPlaying = false; updPlayUI(); if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; }
+        if (e.data === YT.PlayerState.PLAYING) { 
+            state.isPlaying = true; updPlayUI(); startYtTick(); 
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; 
+            let a = document.getElementById('audioEl');
+            if (a && !a.src) { a.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA=="; a.loop = true; }
+            if (a) a.play().catch(()=>{});
+        }
+        else if (e.data === YT.PlayerState.PAUSED) { 
+            state.isPlaying = false; updPlayUI(); 
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; 
+            let a = document.getElementById('audioEl');
+            if (a) a.pause();
+        }
         else if (e.data === YT.PlayerState.ENDED) { stopYtTick(); onEnded(); }
       },
       onError: () => { if (!ytActive) return; showToast(t('yt_play_error')); stopYtTick(); nextT(); }
@@ -1472,6 +1483,12 @@ function addSearchTrack(item){
   saveTrackToDB(tr);
   renderLibrary();
   showToast(t('toast_search_added'));
+  
+  // Auto-play logic
+  state.queue = [tr.id];
+  state.currentIndex = 0;
+  loadTrack(tr.id);
+  openNP();
 }
 
 /* ===== Search tab wiring ===== */
