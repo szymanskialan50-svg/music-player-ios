@@ -115,6 +115,8 @@ public final class YouTubePlayer: NSObject, ObservableObject {
         let origin = computeOriginURL()
         self.originURL = origin
         playerVars["origin"] = origin.absoluteString
+        playerVars["autoplay"] = 1
+        playerVars["playsinline"] = 1
         playerParams["playerVars"] = playerVars
         
         guard let jsonData = try? JSONSerialization.data(withJSONObject: playerParams, options: .prettyPrinted),
@@ -382,6 +384,7 @@ public final class YouTubePlayer: NSObject, ObservableObject {
         switch action {
         case "onReady":
             isReady = true
+            play()
             
         case "onStateChange":
             playerState = YouTubePlayerState(code: data ?? "")
