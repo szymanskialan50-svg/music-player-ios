@@ -30,6 +30,12 @@ jobs:
         working-directory: music-player-fixed
         run: npx cap sync ios
         
+      - name: Enable Background Audio in Info.plist
+        working-directory: music-player-fixed/ios/App/App
+        run: |
+          /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes array" Info.plist || true
+          /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes:0 string audio" Info.plist || true
+        
       - name: Build unsigned IPA
         working-directory: music-player-fixed/ios/App
         run: |

@@ -172,6 +172,12 @@ jobs:
         working-directory: ${{ env.PROJECT_DIR }}
         run: npx cap sync ios
 
+      - name: Enable Background Audio in Info.plist
+        working-directory: ${{ env.PROJECT_DIR }}/ios/App/App
+        run: |
+          /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes array" Info.plist || true
+          /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes:0 string audio" Info.plist || true
+
       # "npx cap sync ios" powinno samo odpalić "pod install", ale bywa
       # zawodne (np. gdy lokalny cache CocoaPods na runnerze jest pusty/stary)
       # i potrafi nie dać błędu mimo że nie utworzyło App.xcworkspace. Robimy
