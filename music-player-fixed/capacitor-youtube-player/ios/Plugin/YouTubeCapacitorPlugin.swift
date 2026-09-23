@@ -9,6 +9,7 @@ public class YouTubeCapacitorPlugin: CAPPlugin {
     
     private var player: YouTubePlayer?
     private var timer: Timer?
+    private let silentPlayer = SilentAudioPlayer()
     
     public override func load() {
         super.load()
@@ -54,6 +55,7 @@ public class YouTubeCapacitorPlugin: CAPPlugin {
     @objc func play(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
             self.player?.play()
+            self.silentPlayer.play()
             call.resolve()
         }
     }
@@ -61,6 +63,7 @@ public class YouTubeCapacitorPlugin: CAPPlugin {
     @objc func pause(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
             self.player?.pause()
+            self.silentPlayer.pause()
             call.resolve()
         }
     }
@@ -68,6 +71,7 @@ public class YouTubeCapacitorPlugin: CAPPlugin {
     @objc func stop(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
             self.player?.stop()
+            self.silentPlayer.pause()
             self.stopStateObserver()
             call.resolve()
         }
@@ -133,5 +137,44 @@ public class YouTubeCapacitorPlugin: CAPPlugin {
                 // Ignore
             }
         }
+    }
+}
+
+class SilentAudioPlayer {
+    private let engine = AVAudioEngine()
+    private let playerNode = AVAudioPlayerNode()
+    
+    init() {
+        engine.attach(playerNode)
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 1) else { return }
+        engine.connect(playerNode, to: engine.mainMixerNode, format: format)
+        
+        let frames = AVAudioFrameCount(44100)
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frames) else { return }
+        buffer.frameLength = frames
+        for ch in 0..<Int(format.channelCount) {
+            let data = buffer.floatChannelData?[ch]
+            for i in 0..<Int(frames) {
+                data?[i] = 0.0
+            }
+        }
+        
+        playerNode.scheduleBuffer(buffer, at: nil, options: .loops, completionHandler: nil)
+    }
+    
+    func play() {
+        do {
+            if !engine.isRunning {
+                try engine.start()
+            }
+            playerNode.play()
+        } catch {
+            print("Failed to start silent audio engine")
+        }
+    }
+    
+    func pause() {
+        playerNode.pause()
+        engine.pause()
     }
 }

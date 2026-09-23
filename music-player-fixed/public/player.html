@@ -818,8 +818,8 @@ function updPlayUI(){
   });
 }
 function updNPInfo(tr){document.getElementById('npTitle').textContent=tr.name;miniTitleEl.textContent=tr.name;monogram=firstLetter(tr.name);miniAvatarEl.textContent=monogram;let npThumb=document.getElementById('npThumb');if(npThumb&&tr.id)npThumb.src='https://i.ytimg.com/vi/'+tr.id+'/hqdefault.jpg';}
-function openNP(){nowPlayingEl.classList.remove('hidden');requestAnimationFrame(()=>{nowPlayingEl.classList.add('open');setupVis();startVis();});}
-function closeNP(){nowPlayingEl.classList.remove('open');setTimeout(()=>{nowPlayingEl.classList.add('hidden');stopVis();},360);}
+function openNP(){nowPlayingEl.classList.remove('hidden');requestAnimationFrame(()=>{nowPlayingEl.classList.add('open');});}
+function closeNP(){nowPlayingEl.classList.remove('open');setTimeout(()=>{nowPlayingEl.classList.add('hidden');},360);}
 function showMini(){if(miniPlayerEl.classList.contains('visible'))return;miniPlayerEl.classList.remove('hidden');requestAnimationFrame(()=>miniPlayerEl.classList.add('visible'));}
 function hideMini(){miniPlayerEl.classList.remove('visible');setTimeout(()=>miniPlayerEl.classList.add('hidden'),300);}
 function openSheet(id){openSheetId=id;overlayEl.classList.remove('hidden');document.getElementById(id).classList.remove('hidden');requestAnimationFrame(()=>{overlayEl.classList.add('visible');document.getElementById(id).classList.add('open');});}
@@ -1520,6 +1520,7 @@ setTimeout(() => { if (typeof applyLanguage === 'function') applyLanguage(lang);
 </script>
 </body>
 </html>
+
 
 
 
