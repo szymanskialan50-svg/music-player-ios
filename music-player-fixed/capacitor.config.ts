@@ -11,6 +11,7 @@ const config: CapacitorConfig = {
   // `npm run prepare:www` copies it into www/index.html before `cap sync`.
   webDir: "www",
   server: {
+    hostname: "com.musicplayer.app",
     androidScheme: "https",
     iosScheme: "https"
   },
