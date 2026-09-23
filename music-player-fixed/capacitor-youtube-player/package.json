@@ -9,7 +9,7 @@
   "files": [
     "dist/",
     "ios/Plugin/",
-    "capacitor-youtube-player.podspec"
+    "CapacitorYoutubePlayer.podspec"
   ],
   "author": "Antigravity",
   "license": "MIT",
