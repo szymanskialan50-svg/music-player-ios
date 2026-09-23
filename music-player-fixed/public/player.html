@@ -398,11 +398,7 @@ input[type=search]::-webkit-search-results-decoration { -webkit-appearance:none;
   <button id="npClose" class="icon-btn np-close" aria-label="Close">
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M18 15l-6-6-6 6"/></svg>
   </button>
-  <div class="np-visual-wrap"><canvas id="visualizer" class="visualizer"></canvas></div>
-  <div class="np-info">
-    <h2 id="npTitle" class="np-title">&#8212;</h2>
-    <button id="npLyricsBtn" class="np-lyrics-btn" style="background: none; border: none; color: var(--accent); font-size: 13px; font-weight: 600; margin-top: 4px; padding: 4px 10px; cursor: pointer;">Lyrics</button>
-  </div>
+  <div class="np-visual-wrap"><img id="npThumb" class="visualizer" style="border-radius:18px; object-fit:cover; width:min(72vw,300px); height:min(72vw,300px);" src="" /></div><div class="np-info"><h2 id="npTitle" class="np-title">&#8212;</h2></div>
   <div class="np-progress">
     <input type="range" id="npSeek" min="0" max="100" value="0" step="0.1">
     <div class="np-times"><span id="npCurrent">0:00</span><span id="npDuration">0:00</span></div>
@@ -821,7 +817,7 @@ function updPlayUI(){
     else{const tr=state.tracks.find(x=>x.id===row.dataset.trackId);if(tr)av.textContent=firstLetter(tr.name);}
   });
 }
-function updNPInfo(tr){document.getElementById('npTitle').textContent=tr.name;miniTitleEl.textContent=tr.name;monogram=firstLetter(tr.name);miniAvatarEl.textContent=monogram;}
+function updNPInfo(tr){document.getElementById('npTitle').textContent=tr.name;miniTitleEl.textContent=tr.name;monogram=firstLetter(tr.name);miniAvatarEl.textContent=monogram;let npThumb=document.getElementById('npThumb');if(npThumb&&tr.id)npThumb.src='https://i.ytimg.com/vi/'+tr.id+'/hqdefault.jpg';}
 function openNP(){nowPlayingEl.classList.remove('hidden');requestAnimationFrame(()=>{nowPlayingEl.classList.add('open');setupVis();startVis();});}
 function closeNP(){nowPlayingEl.classList.remove('open');setTimeout(()=>{nowPlayingEl.classList.add('hidden');stopVis();},360);}
 function showMini(){if(miniPlayerEl.classList.contains('visible'))return;miniPlayerEl.classList.remove('hidden');requestAnimationFrame(()=>miniPlayerEl.classList.add('visible'));}
@@ -1521,61 +1517,9 @@ function addSearchTrack(item){
 ensureYTApi();
 setTimeout(() => { if (typeof applyLanguage === 'function') applyLanguage(lang); }, 0);
 
-/* ===== Lyrics Feature ===== */
-const npLyricsBtn = document.getElementById('npLyricsBtn');
-const lyricsCloseBtn = document.getElementById('lyricsCloseBtn');
-const lyricsContent = document.getElementById('lyricsContent');
-
-if (npLyricsBtn) {
-  npLyricsBtn.addEventListener('click', async () => {
-    const cur = getCur();
-    if (!cur) return;
-    
-    let artist = cur.channel || '';
-    let title = cur.name || '';
-    
-    if (!artist && title.includes('-')) {
-      const parts = title.split('-');
-      artist = parts[0].trim();
-      title = parts.slice(1).join('-').trim();
-    }
-    
-    // Remove (Official Video) or [Official Audio] from title to improve search
-    title = title.replace(/\(.*?\)/g, '').replace(/\[.*?\]/g, '').trim();
-    artist = artist.replace(/ - Topic/g, '').trim();
-    
-    lyricsContent.textContent = "Loading lyrics...";
-    openSheet('lyricsSheet');
-    
-    if (!artist || !title) {
-      lyricsContent.textContent = "Could not identify artist and title for lyrics search.";
-      return;
-    }
-    
-    try {
-      const res = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(title)}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.lyrics) {
-          lyricsContent.textContent = data.lyrics;
-        } else {
-          lyricsContent.textContent = "Lyrics not found.";
-        }
-      } else {
-        lyricsContent.textContent = "Lyrics not found.";
-      }
-    } catch (e) {
-      lyricsContent.textContent = "Error fetching lyrics. Check your internet connection.";
-    }
-  });
-}
-
-if (lyricsCloseBtn) {
-  lyricsCloseBtn.addEventListener('click', () => {
-    closeSheet('lyricsSheet');
-  });
-}
-
 </script>
 </body>
 </html>
+
+
+

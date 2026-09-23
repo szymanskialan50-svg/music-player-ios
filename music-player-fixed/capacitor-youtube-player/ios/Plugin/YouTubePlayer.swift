@@ -360,6 +360,24 @@ public final class YouTubePlayer: NSObject, ObservableObject {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
+        if #available(iOS 14.0, *) {
+            config.allowsPictureInPictureMediaPlayback = true
+        }
+
+        // Prevent YouTube from pausing video on visibility change
+        let source = """
+        Object.defineProperty(document, 'visibilityState', {
+            get: function() { return 'visible'; }
+        });
+        Object.defineProperty(document, 'hidden', {
+            get: function() { return false; }
+        });
+        document.addEventListener('visibilitychange', function(e) {
+            e.stopImmediatePropagation();
+        }, true);
+        """
+        let script = WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: false)
+        config.userContentController.addUserScript(script)
         
         let wv = WKWebView(frame: .zero, configuration: config)
         wv.scrollView.isScrollEnabled = false
