@@ -232,7 +232,7 @@ input[type=search]::-webkit-search-results-decoration { -webkit-appearance:none;
 .search-badge { font-size:10.5px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-tertiary); border:1px solid var(--border-soft); border-radius:6px; padding:2px 5px; }
 .search-spin { display:inline-block; width:15px; height:15px; border-radius:50%; border:2px solid currentColor; border-right-color:transparent; animation:spin 0.7s linear infinite; vertical-align:-2px; }
 @keyframes spin { to { transform:rotate(360deg); } }
-#ytHost { position:fixed; width:300px; height:300px; left:-9999px; top:-9999px; opacity:0.01; pointer-events:none; }
+#ytHost { position:fixed; width:300px; height:300px; left:0; top:0; opacity:0.01; pointer-events:none; z-index:-9999; }
 </style>
 </head>
 <body>
@@ -817,7 +817,7 @@ function updPlayUI(){let tn=document.getElementById('npThumb');if(tn){if(state.i
     else{const tr=state.tracks.find(x=>x.id===row.dataset.trackId);if(tr)av.textContent=firstLetter(tr.name);}
   });
 }
-function updNPInfo(tr){document.getElementById('npTitle').textContent=tr.name;miniTitleEl.textContent=tr.name;monogram=firstLetter(tr.name);miniAvatarEl.textContent=monogram;let npThumb=document.getElementById('npThumb');if(npThumb&&tr.id)npThumb.src='https://i.ytimg.com/vi/'+tr.id+'/hqdefault.jpg';}
+function updNPInfo(tr){document.getElementById('npTitle').textContent=tr.name;miniTitleEl.textContent=tr.name;monogram=firstLetter(tr.name);miniAvatarEl.textContent=monogram;let npThumb=document.getElementById('npThumb');if(npThumb){npThumb.src=tr.thumb||(tr.videoId?('https://i.ytimg.com/vi/'+tr.videoId+'/hqdefault.jpg'):'');}}
 function openNP(){nowPlayingEl.classList.remove('hidden');requestAnimationFrame(()=>{nowPlayingEl.classList.add('open');});}
 function closeNP(){nowPlayingEl.classList.remove('open');setTimeout(()=>{nowPlayingEl.classList.add('hidden');},360);}
 function showMini(){if(miniPlayerEl.classList.contains('visible'))return;miniPlayerEl.classList.remove('hidden');requestAnimationFrame(()=>miniPlayerEl.classList.add('visible'));}
@@ -1475,6 +1475,7 @@ function addSearchTrack(item){
     duration: item.duration || null,
     url: null,
     file: null,
+    thumb: item.thumb || null,
     videoId: item.videoId,
     channel: item.artist || '',
     source: 'youtube'
