@@ -393,20 +393,7 @@ input[type=search]::-webkit-search-results-decoration { -webkit-appearance:none;
           </div>
         </div>
       </div>
-      <div class="settings-group">
-        <h3 data-i18n="lyrics_label">Lyrics & Audio</h3>
-        <div class="settings-card">
-          <label class="settings-row" style="cursor:pointer; display:flex; justify-content:space-between; align-items: center;">
-            <span style="font-size:15.5px;font-weight:500" data-i18n="profanity_filter">Wycisz przekleństwa</span>
-            <select id="profanitySelect" style="background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:4px 8px; font-size:14px; outline:none;">
-              <option value="off">Wyłączone</option>
-              <option value="blur">Ukryj w tekście</option>
-              <option value="mute">Wycisz w piosence</option>
-              <option value="both">Ukryj i wycisz</option>
-            </select>
-          </label>
-        </div>
-      </div>
+
       <div class="settings-group">
         <h3 data-i18n="color_label">Accent Color</h3>
         <div class="settings-card"><div class="color-swatches" id="colorSwatches"></div></div>
@@ -759,27 +746,8 @@ function initBgAudio(){
       ms.setActionHandler('seekbackward',d=>{audioEl.currentTime=Math.max(0,audioEl.currentTime-(d.seekOffset||10));});
     }catch(e){}
   }
-  // Delay before re-nudging audio after app foreground — prevents the 0.5s
-  // cutoff glitch where audio stops momentarily as the app regains focus.
-  let _nudgeTimer = null;
-  const nudge = (delay) => {
-    if (!state.isPlaying) return;
-    if (_nudgeTimer) clearTimeout(_nudgeTimer);
-    _nudgeTimer = setTimeout(() => {
-      _nudgeTimer = null;
-      if (!state.isPlaying) return;
-      if (audioCtx && audioCtx.state !== 'running') audioCtx.resume().catch(() => {});
-      if (audioEl.paused && audioEl.src && !isYt(getCur())) audioEl.play().catch(() => {});
-    }, delay || 0);
-  };
-  // Poll every 4s as a safety net (less aggressive than before)
-  setInterval(() => nudge(0), 4000);
-  // On visibility restore, wait 550ms before nudging — this is the key fix:
-  // the OS/browser sometimes briefly cuts audio when foregrounding, and
-  // calling play() too quickly restarts from a weird state causing the 0.5s blip.
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') nudge(550); });
-  window.addEventListener('pageshow', () => { if (state.isPlaying) nudge(550); });
-  window.addEventListener('focus', () => { if (state.isPlaying) nudge(300); });
+  // Removed aggressive 4s polling `nudge` interval that caused audio to stutter or cut out
+  // when leaving the app to the background on iOS. We rely on mediaSession and Capacitor config.
 }
 let msArtwork=null;
 function getMSArtwork(){
@@ -875,55 +843,9 @@ function drawVis(){
   vx.fillStyle='rgba(245,245,247,0.92)';vx.font=`700 ${Math.round(ir*0.75)}px -apple-system,sans-serif`;vx.textAlign='center';vx.textBaseline='middle';vx.fillText(monogram||'♪',cx,cy+ir*0.04);
 }
 
-/* ===== PROFANITY FILTER ===== */
-// All bad-word roots — filter catches the root + any trailing letters (conjugations etc.)
-const BAD_WORDS_ROOTS = [
-  'fuck','shit','bitch','cunt','dick','pussy','asshole','bastard','whore',
-  'kurwa','kurw','jeba','jebać','jebnąć','jebią','jebie','jebany','jebana','jebane',
-  'pierdol','pierdolę','pierdole','pierdolisz','pierdoli','pierdolony',
-  'spierdala','spierdalaj','spierdol',
-  'chuj','chuju','chujowy',
-  'cipa','cipę','cipie',
-  'dziwka','dziwki','dziwkę',
-  'suka','suki','sukę',
-  'zajebi','zajebist','pizda','pizdy',
-  'cwel','cwela','skurwysyn'
-];
-// Sort longest first so longer roots match before their substrings
-BAD_WORDS_ROOTS.sort((a,b) => b.length - a.length);
-
-function getProfanitySetting() {
-  return localStorage.getItem('mp_profanity_setting') || (localStorage.getItem('mp_profanity_filter') === 'true' ? 'blur' : 'off');
-}
-
-// Build a regex that handles:
-//  - word boundaries for latin + Polish Unicode letters (no \b which fails on non-ASCII)
-//  - matching root + any trailing word chars (conjugations)
-function _buildProfanityRegex() {
-  // escaped roots joined by | - longest first (sorted above)
-  const escaped = BAD_WORDS_ROOTS.map(w => w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
-  // Use a global, case-insensitive, unicode regex
-  // We match: (non-word-char or start)(root)(trailing word chars)(non-word-char or end)
-  // Since JS \b fails on Polish, we use lookahead/lookbehind with a char class
-  return new RegExp(`(?<=[^a-zA-Z\u00C0-\u024F\u0400-\u04FF]|^)(${escaped})[a-zA-Z\u00C0-\u024F\u0400-\u04FF]*(?=[^a-zA-Z\u00C0-\u024F\u0400-\u04FF]|$)`, 'giu');
-}
-
-const _PROFANITY_RE = _buildProfanityRegex();
-
-function hasProfanity(text) {
-  if (!text) return false;
-  _PROFANITY_RE.lastIndex = 0;
-  return _PROFANITY_RE.test(text);
-}
+/* ===== PROFANITY FILTER (REMOVED) ===== */
 function applyProfanityFilter(text) {
-  const setting = getProfanitySetting();
-  if (setting === 'off' || setting === 'mute') return text;
-  if (!text) return text;
-  _PROFANITY_RE.lastIndex = 0;
-  return text.replace(_PROFANITY_RE, (match) => {
-    if (match.length <= 2) return match;
-    return match[0] + '*'.repeat(match.length - 2) + match.slice(-1);
-  });
+  return text;
 }
 
 /* ===== UI ===== */
@@ -1091,9 +1013,11 @@ document.getElementById('npClose').addEventListener('click',closeNP);
       if (lyricsEl.classList.contains('hidden')) {
         lyricsEl.classList.remove('hidden');
         nowPlayingEl.classList.remove('no-lyrics');
+        localStorage.setItem('mp_hide_lyrics', 'false');
       } else {
         lyricsEl.classList.add('hidden');
         nowPlayingEl.classList.add('no-lyrics');
+        localStorage.setItem('mp_hide_lyrics', 'true');
       }
     });
   }
@@ -1380,14 +1304,6 @@ function updateLyricsSync(currentTime){
   if (idx === lastActiveLyricIndex) return;
   lastActiveLyricIndex = idx;
   
-  const setting = getProfanitySetting();
-  if (setting === 'mute' || setting === 'both') {
-    if (idx >= 0 && currentSyncedLyrics[idx] && hasProfanity(currentSyncedLyrics[idx].text)) mutePlayback(true);
-    else mutePlayback(false);
-  } else {
-    mutePlayback(false);
-  }
-
   const txt = document.getElementById('npLyricsText');
   if (!txt) return;
   const lines = txt.children;
@@ -1403,8 +1319,13 @@ async function loadLyricsFor(tr){
   const txt = document.getElementById('npLyricsText');
   if (!box || !txt || !tr) return;
   const myToken = ++lyricsReqToken;
-  box.classList.remove('hidden');
-  nowPlayingEl.classList.remove('no-lyrics');
+  if (localStorage.getItem('mp_hide_lyrics') === 'true') {
+    box.classList.add('hidden');
+    nowPlayingEl.classList.add('no-lyrics');
+  } else {
+    box.classList.remove('hidden');
+    nowPlayingEl.classList.remove('no-lyrics');
+  }
   if (LYRICS_CACHE[tr.id]) { renderLyricsPanel(LYRICS_CACHE[tr.id]); return; }
   currentSyncedLyrics = null;
   lastActiveLyricIndex = -1;
